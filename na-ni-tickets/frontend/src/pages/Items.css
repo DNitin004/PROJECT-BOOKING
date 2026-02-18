@@ -1,0 +1,246 @@
+.items-page {
+  min-height: calc(100vh - 60px);
+  background: var(--light-bg);
+  padding: 40px 0;
+}
+
+.page-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 40px 20px;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.page-header h1 {
+  font-size: 36px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.page-header p {
+  font-size: 18px;
+  opacity: 0.95;
+}
+
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 25px;
+  margin: 30px 0;
+}
+
+.item-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.item-card:hover {
+  transform: translateY(-10px);
+  box-shadow: var(--shadow-lg);
+}
+
+.item-image {
+  position: relative;
+  overflow: hidden;
+  height: 300px;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.item-card:hover .item-image img {
+  transform: scale(1.05);
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.item-card:hover .overlay {
+  opacity: 1;
+}
+
+.btn-book {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.btn-book:hover {
+  background: #ff5722;
+  transform: scale(1.05);
+}
+
+.item-info {
+  padding: 20px;
+}
+
+.item-info h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: var(--dark-text);
+}
+
+.movie-meta {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.rating {
+  background: var(--warning-color);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.language {
+  background: var(--light-bg);
+  padding: 4px 8px;
+  border-radius: 3px;
+  color: var(--light-text);
+}
+
+.shows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.show-time {
+  background: var(--light-bg);
+  padding: 6px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.concert-meta {
+  font-size: 14px;
+  color: var(--light-text);
+}
+
+.concert-meta p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.artists {
+  font-size: 13px;
+  color: var(--light-text);
+  margin-bottom: 10px;
+}
+
+.artists span {
+  display: inline-block;
+  background: var(--light-bg);
+  padding: 4px 8px;
+  border-radius: 3px;
+  margin-right: 8px;
+  margin-bottom: 5px;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.no-data p {
+  color: var(--light-text);
+  font-size: 18px;
+}
+.placeholder-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  text-align: center;
+  padding: 20px;
+  word-break: break-word;
+  z-index: 1;
+}
+
+.coming-soon {
+  text-align: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.coming-soon h2 {
+  font-size: 28px;
+  color: var(--dark-text);
+  margin-bottom: 10px;
+}
+
+.coming-soon p {
+  color: var(--light-text);
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  .items-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .item-image {
+    height: 250px;
+  }
+}

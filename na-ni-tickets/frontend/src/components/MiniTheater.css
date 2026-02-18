@@ -1,0 +1,30 @@
+.mini-theater{
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+.mini-theater .screen{
+  background: #e9ecef;
+  text-align:center;
+  padding:8px 0;
+  margin-bottom:12px;
+  font-weight:700;
+}
+.seats-grid{
+  display:grid;
+  grid-template-columns:repeat(8, 1fr);
+  gap:8px;
+  margin-bottom:12px;
+}
+.seat{
+  padding:8px 6px;
+  border-radius:4px;
+  border:1px solid #ddd;
+  background:#f8f9fa;
+  cursor:pointer;
+}
+.seat.booked{ background:#6c757d; color:#fff; cursor:not-allowed }
+.seat.selected{ background:#198754; color:#fff }
+.mini-theater-footer{ display:flex; justify-content:space-between; align-items:center }
+.btn-confirm{ background:#0d6efd; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer }

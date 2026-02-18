@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' http://localhost:* ws://localhost:*; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: http: https:; font-src 'self'; media-src 'self' data: blob: http: https:;">
+  <title>NA-NI TICKETS - Multi-Purpose Ticket Booking Platform</title>
+  <meta name="description" content="Book movie, concert, bus, train, flight, and car tickets all on one platform">
+  <meta name="keywords" content="booking,tickets,movies,concerts,buses,trains,flights,cars">
+  <meta name="author" content="NA-NI TICKETS">
+  
+  <!-- Block telemetry at all levels -->
+  <script>
+    'use strict';
+    
+    const BLOCKED_DOMAINS = ['useblackbox.io', 'useblackbox', 'segment.com', 'analytics', 'ga.google', 'googleanalytics', 'telemetry', 'via.placeholder.com', 'placeholder'];
+    
+    const isBlockedURL = (url) => {
+      if (!url) return false;
+      try {
+        const str = String(url).toLowerCase();
+        return BLOCKED_DOMAINS.some(domain => str.includes(domain));
+      } catch { return false; }
+    };
+    
+    // ========== SUPPRESS ALL CONSOLE OUTPUT RELATED TO BLOCKED REQUESTS ==========
+    const origError = console.error;
+    const origWarn = console.warn;
+    const origInfo = console.info;
+    const origLog = console.log;
+    
+    const shouldFilter = (args) => {
+      return args.some(arg => {
+        const str = String(arg).toLowerCase();
+        return str.includes('useblackbox') || 
+               str.includes('access to fetch') ||
+               str.includes('cors policy') ||
+               str.includes('net::err') ||
+               str.includes('failed to fetch') ||
+               str.includes('tlm') ||
+               str.includes('preflight');
+      });
+    };
+    
+    console.error = function(...args) {
+      if (!shouldFilter(args)) origError.apply(console, args);
+    };
+    
+    console.warn = function(...args) {
+      if (!shouldFilter(args)) origWarn.apply(console, args);
+    };
+    
+    console.info = function(...args) {
+      if (!shouldFilter(args)) origInfo.apply(console, args);
+    };
+    
+    console.log = function(...args) {
+      if (!shouldFilter(args)) origLog.apply(console, args);
+    };
+    
+    // ========== BLOCK NETWORK REQUESTS ==========
+    window.fetch = (function(originalFetch) {
+      return function(url) {
+        if (isBlockedURL(url)) {
+          console.debug('[Blocked]', url);
+          return Promise.resolve(new Response('{}', { status: 200, statusText: 'OK' }));
+        }
+        return originalFetch.apply(this, arguments);
+      };
+    })(window.fetch);
+    
+    XMLHttpRequest.prototype.open = (function(originalOpen) {
+      return function(method, url) {
+        if (isBlockedURL(url)) {
+          this._isBlocked = true;
+          return;
+        }
+        return originalOpen.apply(this, arguments);
+      };
+    })(XMLHttpRequest.prototype.open);
+    
+    XMLHttpRequest.prototype.send = (function(originalSend) {
+      return function() {
+        if (this._isBlocked) {
+          const self = this;
+          setTimeout(() => {
+            self.readyState = 4;
+            self.status = 200;
+            self.statusText = 'OK';
+            self.responseText = '{}';
+            self.response = {};
+            try {
+              self.onload?.call(self);
+              self.onreadystatechange?.call(self);
+            } catch (e) {}
+          }, 0);
+          return;
+        }
+        return originalSend.apply(this, arguments);
+      };
+    })(XMLHttpRequest.prototype.send);
+    
+    // ========== SUPPRESS UNHANDLED ERRORS ==========
+    window.addEventListener('unhandledrejection', (event) => {
+      const reason = String(event.reason || '').toLowerCase();
+      if (reason.includes('useblackbox') || reason.includes('cors') || reason.includes('fetch')) {
+        event.preventDefault();
+      }
+    });
+    
+    window.addEventListener('error', (event) => {
+      const msg = (event.message || '').toLowerCase();
+      const filename = (event.filename || '').toLowerCase();
+      if (filename.includes('useblackbox') || msg.includes('useblackbox') || filename.includes('iife.js')) {
+        event.preventDefault();
+        return true;
+      }
+    });
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
