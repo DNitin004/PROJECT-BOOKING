@@ -1,17 +1,6 @@
 version: '3.8'
 
 services:
-  mongodb:
-    image: mongo:5.0
-    container_name: nani-tickets-mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: nani-tickets
-    restart: unless-stopped
-
   backend:
     build:
       context: ./na-ni-tickets/backend
@@ -20,20 +9,18 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/nani-tickets
-      - JWT_SECRET=your_jwt_secret_key
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRE=7d
       - PORT=5000
       - SMTP_HOST=smtp.gmail.com
       - SMTP_PORT=587
-      - SMTP_USER=your_email@gmail.com
-      - SMTP_PASS=your_app_password
-      - SENDER_EMAIL=your_email@gmail.com
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SENDER_EMAIL=${SENDER_EMAIL}
       - SENDER_NAME=NA-NI TICKETS
-      - FRONTEND_URL=http://localhost:3000
+      - FRONTEND_URL=${FRONTEND_URL}
       - OTP_EXPIRY=10
-    depends_on:
-      - mongodb
     restart: unless-stopped
 
   frontend:
@@ -44,10 +31,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:5000/api
-      - REACT_APP_STRIPE_PUBLIC_KEY=your_stripe_public_key
-    depends_on:
-      - backend
+      - REACT_APP_API_URL=${REACT_APP_API_URL}
+      - REACT_APP_STRIPE_PUBLIC_KEY=${REACT_APP_STRIPE_PUBLIC_KEY}
+    restart: unless-stopped
     restart: unless-stopped
 
 volumes:
