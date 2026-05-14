@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaHome, FaFilm, FaMusic, FaBus, FaTrain, FaPlane, FaCar, FaTicketAlt, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { FaHome, FaFilm, FaMusic, FaBus, FaTrain, FaPlane, FaCar, FaUser, FaSignOutAlt } from 'react-icons/fa';
 import { useAuthStore } from '../store/store';
 import './Navbar.css';
 
@@ -19,7 +19,7 @@ function Navbar() {
     <nav className="navbar">
       <div className="container navbar-container">
         <Link to="/" className="logo">
-          <FaTicketAlt /> NA-NI TICKETS
+          <img src="/logo.svg" alt="" className="logo-mark" /> NA-NI TICKETS
         </Link>
 
         <div className={`nav-menu ${menuOpen ? 'active' : ''}`}>
@@ -30,7 +30,7 @@ function Navbar() {
             <FaFilm /> Movies
           </Link>
           <Link to="/concerts" className="nav-link">
-            <FaMusic /> Concerts
+            <FaMusic /> Events
           </Link>
           <Link to="/buses" className="nav-link">
             <FaBus /> Buses

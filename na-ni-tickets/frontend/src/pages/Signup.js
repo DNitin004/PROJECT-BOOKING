@@ -56,7 +56,17 @@ function Signup() {
 
   return (
     <div className="auth-container">
+      <div className="auth-visual" aria-hidden="true">
+        <div className="auth-ticket-card auth-ticket-main">
+          <span>New Journey</span>
+          <strong>Create your pass</strong>
+          <small>One account for every ticket</small>
+        </div>
+        <div className="auth-ticket-card auth-ticket-float">OTP ready</div>
+        <div className="auth-scan-line"></div>
+      </div>
       <div className="auth-form">
+        <div className="auth-badge">Join the club</div>
         <h2>Create NA-NI TICKETS Account</h2>
         <p className="auth-subtitle">Join us for amazing booking experiences</p>
 
@@ -143,7 +153,14 @@ function Signup() {
           </div>
 
           <button type="submit" className="btn-submit" disabled={isLoading}>
-            {isLoading ? 'Creating Account...' : 'Sign Up'}
+            {isLoading ? (
+              <>
+                <span className="spinner"></span>
+                Creating Account...
+              </>
+            ) : (
+              'Sign Up'
+            )}
           </button>
         </form>
 

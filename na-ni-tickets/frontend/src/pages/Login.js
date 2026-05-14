@@ -38,7 +38,17 @@ function Login() {
 
   return (
     <div className="auth-container">
+      <div className="auth-visual" aria-hidden="true">
+        <div className="auth-ticket-card auth-ticket-main">
+          <span>Premium Access</span>
+          <strong>NA-NI TICKETS</strong>
+          <small>Movies | Travel | Events</small>
+        </div>
+        <div className="auth-ticket-card auth-ticket-float">Secure login</div>
+        <div className="auth-scan-line"></div>
+      </div>
       <div className="auth-form">
+        <div className="auth-badge">Welcome back</div>
         <h2>Login to NA-NI TICKETS</h2>
         <p className="auth-subtitle">Enter your credentials to continue</p>
 
@@ -68,7 +78,14 @@ function Login() {
           </div>
 
           <button type="submit" className="btn-submit" disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Login'}
+            {isLoading ? (
+              <>
+                <span className="spinner"></span>
+                Logging in...
+              </>
+            ) : (
+              'Login'
+            )}
           </button>
         </form>
 

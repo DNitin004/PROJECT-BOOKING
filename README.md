@@ -193,6 +193,33 @@ The backend will start on `http://localhost:5000`
 
 In a new terminal:
 
+### Run using Windows Command Prompt
+
+If you prefer to run the application from the Windows Command Prompt (or PowerShell), use the following commands. Open two separate command prompt windows (one for backend, one for frontend).
+
+Backend (Command Prompt 1):
+
+```
+cd na-ni-tickets\backend
+npm install
+REM create or update .env with your settings (see Configuration section)
+npm run dev
+```
+
+Frontend (Command Prompt 2):
+
+```
+cd na-ni-tickets\frontend
+npm install
+REM create or update .env with your frontend settings (see Configuration section)
+npm start
+```
+
+Notes:
+- Ensure MongoDB is running and `MONGODB_URI` is set in `backend/.env`.
+- Use `npm run dev` in the backend to enable `nodemon` for automatic restarts during development.
+- If ports `3000` or `5000` are in use, stop the conflicting service or change the ports in the `.env` and `package.json` scripts.
+
 ```bash
 cd frontend
 npm start
@@ -205,6 +232,41 @@ The frontend will start on `http://localhost:3000`
 Open your browser and navigate to:
 ```
 http://localhost:3000
+```
+ 
+### Run in Terminal (PowerShell)
+
+If you prefer PowerShell, open two separate PowerShell windows (one for backend, one for frontend) and run the following commands.
+
+Backend (PowerShell 1):
+
+```powershell
+cd "na-ni-tickets\backend"
+npm install
+# optionally set env vars for this session
+$env:MONGODB_URI = 'mongodb://localhost:27017/nani-tickets'
+$env:PORT = '5000'
+npm run dev
+```
+
+Frontend (PowerShell 2):
+
+```powershell
+cd "na-ni-tickets\frontend"
+npm install
+# optionally set env vars for this session
+$env:REACT_APP_API_URL = 'http://localhost:5000/api'
+npm start
+```
+
+Notes:
+- Use `npm run dev` for backend to enable automatic restarts (nodemon).
+- If ports `3000` or `5000` are already in use, stop the conflicting process or change the port values in `.env` and restart.
+- To run backend and frontend from one terminal, you can use separate tabs or use `start-process` to spawn new windows:
+
+```powershell
+start-process powershell -ArgumentList '-NoExit','-Command','cd "na-ni-tickets\backend"; npm run dev'
+start-process powershell -ArgumentList '-NoExit','-Command','cd "na-ni-tickets\frontend"; npm start'
 ```
 
 ## 📁 Project Structure

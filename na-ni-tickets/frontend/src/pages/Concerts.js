@@ -45,8 +45,8 @@ function Concerts() {
   return (
     <div className="items-page">
       <div className="page-header">
-        <h1><FaMusic /> Concert Tickets</h1>
-        <p>Select concert and guest artists, then book OAT category tickets</p>
+        <h1><FaMusic /> Events & Concerts</h1>
+        <p>Select event and guest artists, then book OAT category tickets</p>
       </div>
 
       <div className="container">
@@ -71,8 +71,8 @@ function Concerts() {
           <div className="items-grid">
             {concerts.map((concert) => (
               <div key={concert._id} className="item-card concert-card">
-                <div className="item-image" style={{ backgroundColor: '#e0e0e0', backgroundImage: `url(${concert.posterUrl || 'about:blank'})` }}>
-                  <img src={concert.posterUrl} alt={concert.name} style={concert.posterUrl ? {} : { display: 'none' }} />
+                  <div className="item-image" style={{ backgroundColor: '#e0e0e0', backgroundImage: concert.posterUrl ? `url(${concert.posterUrl})` : 'none' }}>
+                    {concert.posterUrl && <img src={concert.posterUrl} alt={concert.name} />}
                   {!concert.posterUrl && <div className="placeholder-text">{concert.name}</div>}
                   <div className="overlay">
                     <button className="btn-book" onClick={() => navigate(`/concerts/${concert._id}`)}>Book Now</button>

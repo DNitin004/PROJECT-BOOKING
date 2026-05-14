@@ -1,287 +1,350 @@
-import React, { useState, useEffect } from 'react'
-import './Booking.css'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import { bookingsAPI } from '../services/api'
+import React, { useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  FaArrowLeft,
+  FaCheckCircle,
+  FaCreditCard,
+  FaLock,
+  FaReceipt,
+  FaShieldAlt,
+  FaTicketAlt,
+} from 'react-icons/fa';
+import './Booking.css';
 
-// Simple QR Code generator (dummy/placeholder)
-const QRCodeGenerator = ({ text, size = 200 }) => {
-  // For demo purposes, we'll create a visual QR using canvas
-  useEffect(() => {
-    const canvas = document.getElementById('qr-canvas')
-    if (!canvas) return
+const getSeats = (booking, state) => {
+  const seats =
+    state?.selectedSeats ||
+    booking?.selectedSeats ||
+    booking?.seats ||
+    booking?.seatNumbers ||
+    [];
 
-    const ctx = canvas.getContext('2d')
-    canvas.width = size
-    canvas.height = size
+  return Array.isArray(seats) ? seats : [];
+};
 
-    // Fill white background
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, size, size)
+const getBookingTitle = (booking, state) =>
+  booking?.movieName ||
+  booking?.title ||
+  booking?.itemName ||
+  state?.movie?.title ||
+  state?.movie?.name ||
+  'Booking';
 
-    // Draw a pattern that looks like a QR code
-    const moduleSize = size / 25
-    ctx.fillStyle = '#000000'
+const PaymentPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const locationState = location.state;
+  const state = useMemo(() => locationState || {}, [locationState]);
 
-    // Top-left finder pattern
-    for (let i = 0; i < 7; i++) {
-      for (let j = 0; j < 7; j++) {
-        if (i === 0 || i === 6 || j === 0 || j === 6 || (i >= 2 && i <= 4 && j >= 2 && j <= 4)) {
-          ctx.fillRect(i * moduleSize, j * moduleSize, moduleSize, moduleSize)
-        }
-      }
+  const booking = state.booking || state.bookingData || null;
+  const seats = useMemo(() => getSeats(booking, state), [booking, state]);
+  const amount = Number(
+    state.totalAmount ||
+      booking?.totalAmount ||
+      booking?.amount ||
+      booking?.totalPrice ||
+      seats.length * Number(state.pricePerSeat || booking?.pricePerSeat || booking?.price || 0)
+  );
+
+  const [form, setForm] = useState({
+    paymentMethod: 'card',
+    cardName: '',
+    cardNumber: '',
+    expiry: '',
+    cvv: '',
+    upiId: '',
+    saveCard: false,
+    saveUpi: false,
+  });
+  const [processing, setProcessing] = useState(false);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!booking) {
+      return;
     }
 
-    // Top-right finder pattern
-    for (let i = 0; i < 7; i++) {
-      for (let j = 0; j < 7; j++) {
-        if (i === 0 || i === 6 || j === 0 || j === 6 || (i >= 2 && i <= 4 && j >= 2 && j <= 4)) {
-          ctx.fillRect((size / moduleSize - 7 + i) * moduleSize, j * moduleSize, moduleSize, moduleSize)
-        }
-      }
-    }
+    setProcessing(true);
 
-    // Bottom-left finder pattern
-    for (let i = 0; i < 7; i++) {
-      for (let j = 0; j < 7; j++) {
-        if (i === 0 || i === 6 || j === 0 || j === 6 || (i >= 2 && i <= 4 && j >= 2 && j <= 4)) {
-          ctx.fillRect(i * moduleSize, (size / moduleSize - 7 + j) * moduleSize, moduleSize, moduleSize)
-        }
-      }
-    }
+    const paymentReference = `PAY-${Date.now().toString().slice(-8)}`;
 
-    // Random data modules
-    for (let i = 0; i < 25; i++) {
-      for (let j = 0; j < 25; j++) {
-        // Avoid finder patterns and separator areas
-        if ((i < 9 && j < 9) || (i >= 16 && j < 9) || (i < 9 && j >= 16)) {
-          continue
-        }
-        // Seed-based pseudo-random for consistent QR
-        const seed = (text || 'NANI-TICKETS').charCodeAt(0) * 31
-        if ((i * j + seed) % 2 === 0) {
-          ctx.fillRect(i * moduleSize, j * moduleSize, moduleSize, moduleSize)
-        }
-      }
-    }
-  }, [text, size])
-
-  return <canvas id="qr-canvas" style={{ border: '1px solid #ccc', display: 'block' }} />
-}
-
-export default function PaymentPage() {
-  const loc = useLocation()
-  const navigate = useNavigate()
-  const [booking, setBooking] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState('upi')
-  const [showQR, setShowQR] = useState(false)
-
-  useEffect(() => {
-    if (loc.state?.booking) {
-      setBooking(loc.state.booking)
-    } else if (loc.state?.bookingId || loc.state?.amount) {
-      setBooking({
-        bookingId: loc.state.bookingId,
-        totalAmount: loc.state.amount,
-      })
-    } else {
-      toast.error('No booking information found')
-      navigate('/movies')
-    }
-  }, [loc.state, navigate])
-
-  async function handlePaymentConfirm() {
-    if (!booking?.bookingId) {
-      toast.error('Invalid booking')
-      return
-    }
-
-    setLoading(true)
-    try {
-      // Simulate payment confirmation
-      toast.success(`Payment of ₹${booking.totalAmount} confirmed via ${paymentMethod.toUpperCase()}!`)
-      
-      // Navigate to receipt page
-      setTimeout(() => {
-        navigate('/receipt', {
-          state: { 
-            bookingId: booking.bookingId,
-            booking: booking,
-            paymentMethod: paymentMethod
+    setTimeout(() => {
+      navigate('/receipt', {
+        state: {
+          booking,
+          bookingData: booking,
+          payment: {
+            status: 'paid',
+            method: form.paymentMethod,
+            reference: paymentReference,
           },
-        })
-      }, 1000)
-    } catch (err) {
-      toast.error('Payment confirmation failed')
-    } finally {
-      setLoading(false)
-    }
-  }
+          movie: state.movie,
+          theatre: state.theatre,
+          show: state.show,
+          city: state.city,
+        },
+      });
+    }, 1200);
+  };
 
   if (!booking) {
     return (
-      <div className="booking-page">
-        <div className="container">
-          <h2>Loading payment details...</h2>
+      <div className="booking-page booking-page--premium">
+        <div className="booking-shell">
+          <div className="booking-card booking-card--empty">
+            <h1>No booking found for payment</h1>
+            <p>
+              Your payment page needs an active booking first. Choose your movie,
+              reserve seats, and then return here to complete checkout.
+            </p>
+            <button type="button" className="booking-primary-btn" onClick={() => navigate(-1)}>
+              <FaArrowLeft />
+              Go back
+            </button>
+          </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="booking-page">
-      <div className="container" style={{ maxWidth: '600px' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '30px', color: '#e74c3c' }}>
-          Complete Your Payment
-        </h2>
+    <div className="booking-page booking-page--premium">
+      <div className="booking-backdrop" />
 
-        {/* Booking Summary */}
-        <div style={{
-          backgroundColor: '#f8f9fa',
-          padding: '20px',
-          borderRadius: '8px',
-          marginBottom: '30px',
-          border: '1px solid #dee2e6'
-        }}>
-          <h4 style={{ marginTop: 0, color: '#333' }}>Booking Summary</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', fontSize: '14px' }}>
-            <div>
-              <strong style={{ color: '#666' }}>Booking ID:</strong>
-              <div style={{ color: '#e74c3c', fontSize: '16px', marginTop: '5px' }}>
-                {booking.bookingId}
-              </div>
-            </div>
-            <div>
-              <strong style={{ color: '#666' }}>Amount Due:</strong>
-              <div style={{ color: '#27ae60', fontSize: '24px', marginTop: '5px', fontWeight: 'bold' }}>
-                ₹{booking.totalAmount}
-              </div>
-            </div>
-            {booking.movieName && (
-              <div style={{ gridColumn: '1 / -1' }}>
-                <strong style={{ color: '#666' }}>Movie:</strong>
-                <div style={{ marginTop: '5px' }}>{booking.movieName}</div>
-              </div>
-            )}
-            {booking.seats && (
-              <div style={{ gridColumn: '1 / -1' }}>
-                <strong style={{ color: '#666' }}>Seats:</strong>
-                <div style={{ marginTop: '5px' }}>{booking.seats.join(', ')}</div>
-              </div>
-            )}
+      <div className="booking-shell">
+        <section className="payment-hero-card">
+          <div>
+            <span className="booking-badge">
+              <FaLock />
+              Secure payment
+            </span>
+            <h1>Review and complete your booking</h1>
+            <p>
+              Your seats are ready. Finish payment to generate a premium receipt and
+              lock your entry details for the selected show.
+            </p>
           </div>
-        </div>
 
-        {/* Payment Method Selection */}
-        <div style={{ marginBottom: '30px' }}>
-          <h4 style={{ color: '#333', marginBottom: '15px' }}>Select Payment Method</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
-            {[
-              { id: 'upi', label: 'UPI', icon: '📱' },
-              { id: 'card', label: 'Debit/Credit Card', icon: '💳' },
-              { id: 'wallet', label: 'Digital Wallet', icon: '👛' },
-              { id: 'netbanking', label: 'Net Banking', icon: '🏦' },
-            ].map(method => (
-              <button
-                key={method.id}
-                onClick={() => { setPaymentMethod(method.id); setShowQR(false) }}
-                style={{
-                  padding: '15px',
-                  border: paymentMethod === method.id ? '2px solid #e74c3c' : '1px solid #ddd',
-                  borderRadius: '8px',
-                  backgroundColor: paymentMethod === method.id ? '#ffe5e0' : '#fff',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: paymentMethod === method.id ? 'bold' : 'normal',
-                  color: '#333',
-                  transition: 'all 0.3s'
-                }}
-              >
-                <div style={{ fontSize: '24px', marginBottom: '5px' }}>{method.icon}</div>
-                {method.label}
+          <div className="payment-confidence">
+            <div>
+              <FaShieldAlt />
+              <span>Protected checkout</span>
+            </div>
+            <div>
+              <FaReceipt />
+              <span>Instant receipt</span>
+            </div>
+            <div>
+              <FaCheckCircle />
+              <span>Booking confirmation</span>
+            </div>
+          </div>
+        </section>
+
+        <div className="payment-grid">
+          <section className="booking-card booking-card--form">
+            <div className="booking-card__header">
+              <div>
+                <span className="booking-card__eyebrow">{form.paymentMethod === 'card' ? 'Card details' : 'UPI details'}</span>
+                <h2>Payment method</h2>
+              </div>
+              <div className="payment-card-icon">
+                {form.paymentMethod === 'card' ? <FaCreditCard /> : '📱'}
+              </div>
+            </div>
+
+            <form className="booking-form" onSubmit={handleSubmit}>
+              <div className="payment-method-selector">
+                <label className="payment-method-option">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="card"
+                    checked={form.paymentMethod === 'card'}
+                    onChange={handleChange}
+                  />
+                  <span>💳 Credit/Debit Card</span>
+                </label>
+                <label className="payment-method-option">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="upi"
+                    checked={form.paymentMethod === 'upi'}
+                    onChange={handleChange}
+                  />
+                  <span>📱 UPI Payment</span>
+                </label>
+              </div>
+
+              {form.paymentMethod === 'card' ? (
+                <>
+                  <label className="booking-field">
+                    <span>Name on card</span>
+                    <input
+                      type="text"
+                      name="cardName"
+                      value={form.cardName}
+                      onChange={handleChange}
+                      placeholder="Enter cardholder name"
+                      required
+                    />
+                  </label>
+
+                  <label className="booking-field">
+                    <span>Card number</span>
+                    <input
+                      type="text"
+                      name="cardNumber"
+                      value={form.cardNumber}
+                      onChange={handleChange}
+                      inputMode="numeric"
+                      placeholder="1234 5678 9012 3456"
+                      maxLength="19"
+                      required
+                    />
+                  </label>
+
+                  <div className="booking-form__row">
+                    <label className="booking-field">
+                      <span>Expiry</span>
+                      <input
+                        type="text"
+                        name="expiry"
+                        value={form.expiry}
+                        onChange={handleChange}
+                        placeholder="MM/YY"
+                        maxLength="5"
+                        required
+                      />
+                    </label>
+
+                    <label className="booking-field">
+                      <span>CVV</span>
+                      <input
+                        type="password"
+                        name="cvv"
+                        value={form.cvv}
+                        onChange={handleChange}
+                        inputMode="numeric"
+                        placeholder="123"
+                        maxLength="4"
+                        required
+                      />
+                    </label>
+                  </div>
+
+                  <label className="booking-field--checkbox">
+                    <input
+                      type="checkbox"
+                      name="saveCard"
+                      checked={form.saveCard}
+                      onChange={(e) => setForm(current => ({ ...current, saveCard: e.target.checked }))}
+                    />
+                    <span>Save this card for future payments</span>
+                  </label>
+                </>
+              ) : (
+                <>
+                  <label className="booking-field">
+                    <span>UPI ID</span>
+                    <input
+                      type="text"
+                      name="upiId"
+                      value={form.upiId}
+                      onChange={handleChange}
+                      placeholder="yourname@upi"
+                      required
+                    />
+                  </label>
+
+                  <label className="booking-field--checkbox">
+                    <input
+                      type="checkbox"
+                      name="saveUpi"
+                      checked={form.saveUpi}
+                      onChange={(e) => setForm(current => ({ ...current, saveUpi: e.target.checked }))}
+                    />
+                    <span>Save this UPI ID for future payments</span>
+                  </label>
+                </>
+              )}
+
+              <div className="payment-note">
+                <FaLock />
+                <span>This demo flow securely confirms your booking and generates the receipt immediately.</span>
+              </div>
+
+              <button type="submit" className="booking-primary-btn booking-primary-btn--wide" disabled={processing}>
+                {processing ? 'Processing payment...' : `Pay ₹${amount.toLocaleString()} and confirm`}
               </button>
-            ))}
-          </div>
-        </div>
+            </form>
+          </section>
 
-        {/* QR Code for UPI */}
-        {paymentMethod === 'upi' && (
-          <div style={{
-            backgroundColor: '#f0f0f0',
-            padding: '20px',
-            borderRadius: '8px',
-            marginBottom: '20px',
-            textAlign: 'center'
-          }}>
-            <button
-              onClick={() => setShowQR(!showQR)}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#e74c3c',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                marginBottom: '15px',
-                fontSize: '14px',
-                fontWeight: 'bold'
-              }}
-            >
-              {showQR ? 'Hide QR Code' : 'Show QR Code for Payment'}
-            </button>
-
-            {showQR && (
-              <div style={{
-                backgroundColor: 'white',
-                padding: '20px',
-                borderRadius: '8px',
-                display: 'inline-block',
-                border: '2px solid #e74c3c'
-              }}>
-                <QRCodeGenerator text={`upi://pay?pa=nani.tickets@bank&pn=NANI%20TICKETS&am=${booking.totalAmount}&tr=${booking.bookingId}`} size={250} />
-                <p style={{ margin: '15px 0 0 0', fontSize: '12px', color: '#666' }}>
-                  Scan with any UPI app to pay ₹{booking.totalAmount}
-                </p>
+          <aside className="booking-card booking-card--summary">
+            <div className="booking-card__header">
+              <div>
+                <span className="booking-card__eyebrow">Order summary</span>
+                <h2>{getBookingTitle(booking, state)}</h2>
               </div>
-            )}
-          </div>
-        )}
+              <div className="summary-icon-chip">
+                <FaTicketAlt />
+              </div>
+            </div>
 
-        {/* Payment Button */}
-        <button
-          onClick={handlePaymentConfirm}
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '15px',
-            backgroundColor: loading ? '#bdc3c7' : '#27ae60',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            marginBottom: '15px',
-            transition: 'background-color 0.3s'
-          }}
-        >
-          {loading ? 'Processing...' : `Pay ₹${booking.totalAmount} via ${paymentMethod.toUpperCase()}`}
-        </button>
+            <div className="booking-summary-list">
+              <div>
+                <span>Venue</span>
+                <strong>
+                  {booking?.theatreName || booking?.venue || state?.theatre?.name || 'Theatre'}
+                </strong>
+              </div>
+              <div>
+                <span>Showtime</span>
+                <strong>{booking?.showTime || booking?.time || state?.show?.time || 'TBA'}</strong>
+              </div>
+              <div>
+                <span>Seats</span>
+                <strong>{seats.length ? seats.join(', ') : 'Seat details unavailable'}</strong>
+              </div>
+              <div>
+                <span>Price per seat</span>
+                <strong>₹{Number(state.pricePerSeat || booking?.pricePerSeat || booking?.price || 0).toLocaleString()}</strong>
+              </div>
+            </div>
 
-        {/* Info Text */}
-        <p style={{
-          textAlign: 'center',
-          fontSize: '12px',
-          color: '#666',
-          marginTop: '20px',
-          borderTop: '1px solid #eee',
-          paddingTop: '15px'
-        }}>
-          This is a DEMO payment page. No actual payment will be processed.<br />
-          Click the payment button to proceed to booking confirmation.
-        </p>
+            <div className="booking-total-card">
+              <span>Total payable</span>
+              <strong>₹{amount.toLocaleString()}</strong>
+            </div>
+
+            <div className="booking-confidence-list">
+              <div>
+                <FaCheckCircle />
+                <span>Seats already reserved in your booking flow</span>
+              </div>
+              <div>
+                <FaShieldAlt />
+                <span>Receipt works for both direct links and in-app confirmation</span>
+              </div>
+              <div>
+                <FaReceipt />
+                <span>Booking reference generated after payment confirmation</span>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default PaymentPage;

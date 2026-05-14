@@ -1,0 +1,570 @@
+.premium-page-shell,
+.movie-page-shell,
+.movie-details-page,
+.movie-theatres-page,
+.movie-tickets-page {
+  position: relative;
+  min-height: 100vh;
+  padding: 2rem 1.25rem 3rem;
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.14), transparent 28%),
+    radial-gradient(circle at top right, rgba(6, 182, 212, 0.1), transparent 24%),
+    linear-gradient(180deg, #020617, #0f172a 46%, #111827);
+  color: #e2e8f0;
+  overflow: hidden;
+}
+
+.movie-page-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.95;
+}
+
+.movie-page-backdrop--theatres {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(129, 140, 248, 0.18), transparent 18%),
+    radial-gradient(circle at 82% 12%, rgba(34, 211, 238, 0.12), transparent 18%);
+}
+
+.movie-page-backdrop--tickets {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(168, 85, 247, 0.16), transparent 18%),
+    radial-gradient(circle at 82% 18%, rgba(59, 130, 246, 0.14), transparent 18%);
+}
+
+.movie-page-content,
+.movie-details-container,
+.movie-theatres-container,
+.movie-tickets-container {
+  position: relative;
+  z-index: 1;
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.movie-premium-hero,
+.movie-ticket-hero,
+.movie-hero,
+.movie-details-hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.8rem;
+  border-radius: 32px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 30px 80px rgba(2, 6, 23, 0.36);
+}
+
+.movie-ticket-hero {
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+}
+
+.movie-premium-hero__media,
+.movie-ticket-hero__left {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+}
+
+.movie-premium-hero__poster,
+.movie-ticket-hero__poster,
+.movie-poster,
+.movie-details-poster {
+  width: 180px;
+  height: 255px;
+  object-fit: cover;
+  border-radius: 24px;
+  box-shadow: 0 26px 48px rgba(15, 23, 42, 0.32);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.movie-premium-hero__poster--fallback,
+.movie-ticket-hero__poster--fallback {
+  display: grid;
+  place-items: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.28), rgba(37, 99, 235, 0.2));
+  color: #ffffff;
+}
+
+.movie-premium-hero__content h1,
+.movie-ticket-hero__copy h1,
+.movie-hero h1,
+.movie-details-hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  color: #f8fafc;
+}
+
+.movie-premium-hero__content p,
+.movie-ticket-hero__copy p,
+.movie-hero p,
+.movie-details-hero p,
+.section-heading p,
+.movie-ticket-summary__card p {
+  color: rgba(226, 232, 240, 0.82);
+  line-height: 1.7;
+}
+
+.premium-badge,
+.section-heading__eyebrow,
+.section-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  padding: 0.42rem 0.82rem;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.18);
+  color: #c7d2fe;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.movie-premium-hero__meta,
+.movie-ticket-hero__meta,
+.movie-meta,
+.movie-details-meta,
+.section-heading__chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.movie-premium-hero__meta span,
+.movie-ticket-hero__meta span,
+.movie-meta span,
+.movie-details-meta span,
+.section-chip {
+  padding: 0.75rem 0.95rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+}
+
+.movie-section-card,
+.movie-details-card,
+.theatre-card,
+.showtimes-card {
+  padding: 1.6rem;
+  border-radius: 28px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 26px 60px rgba(2, 6, 23, 0.26);
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.2rem;
+  align-items: flex-start;
+  margin-bottom: 1.35rem;
+}
+
+.section-heading h2 {
+  margin: 0.4rem 0 0.4rem;
+  color: #f8fafc;
+}
+
+.showtime-skeleton-grid,
+.premium-theatre-grid,
+.theatres-grid,
+.showtimes-grid {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.showtime-skeleton-grid,
+.premium-theatre-grid,
+.theatres-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.showtime-skeleton-card,
+.premium-theatre-card,
+.theatre-card {
+  padding: 1.25rem;
+  border-radius: 24px;
+  background: rgba(2, 6, 23, 0.58);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.showtime-skeleton-card {
+  overflow: hidden;
+  position: relative;
+}
+
+.showtime-skeleton-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  animation: premiumShimmer 1.7s infinite;
+}
+
+@keyframes premiumShimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-line {
+  height: 12px;
+  margin-bottom: 0.75rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.skeleton-line--wide {
+  width: 72%;
+}
+
+.skeleton-line--short {
+  width: 38%;
+}
+
+.showtime-skeleton-pills {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.showtime-skeleton-pills span {
+  width: 90px;
+  height: 38px;
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.premium-theatre-card__header,
+.theatre-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 0.8rem;
+}
+
+.premium-theatre-card__header h3,
+.theatre-card h3 {
+  margin: 0;
+  color: #f8fafc;
+}
+
+.premium-theatre-card__header p,
+.premium-theatre-card__meta,
+.theatre-card p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgba(226, 232, 240, 0.82);
+}
+
+.premium-theatre-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.14);
+  color: #dbeafe;
+  font-weight: 700;
+}
+
+.premium-showtime-list,
+.showtimes-list {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.premium-showtime-btn,
+.showtime-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.88);
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.premium-showtime-btn:hover,
+.showtime-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(129, 140, 248, 0.46);
+  box-shadow: 0 18px 28px rgba(15, 23, 42, 0.24);
+}
+
+.premium-showtime-btn.is-busy {
+  background: linear-gradient(135deg, rgba(124, 45, 18, 0.34), rgba(15, 23, 42, 0.92));
+}
+
+.premium-showtime-btn.is-open {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(15, 23, 42, 0.92));
+}
+
+.premium-showtime-btn.is-switching {
+  opacity: 0.8;
+}
+
+.premium-showtime-btn__time,
+.premium-showtime-btn__details,
+.premium-showtime-btn__cta {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.premium-showtime-btn__details {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  color: rgba(226, 232, 240, 0.86);
+}
+
+.premium-showtime-btn__cta {
+  color: #c7d2fe;
+  font-weight: 700;
+}
+
+.premium-empty-state,
+.premium-recovery-card {
+  padding: 2.4rem;
+  border-radius: 30px;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.76);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 26px 60px rgba(2, 6, 23, 0.24);
+}
+
+.premium-empty-state h3,
+.premium-recovery-card h1 {
+  margin-top: 0;
+  color: #ffffff;
+}
+
+.premium-primary-btn,
+.premium-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.95rem 1.2rem;
+  border-radius: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.premium-primary-btn {
+  border: none;
+  color: #ffffff;
+  background: linear-gradient(135deg, #8b5cf6, #2563eb);
+  box-shadow: 0 22px 36px rgba(37, 99, 235, 0.24);
+}
+
+.premium-secondary-btn {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.84);
+}
+
+.movie-ticket-layout {
+  gap: 1.25rem;
+}
+
+.movie-ticket-hero__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(110px, 1fr));
+  gap: 0.9rem;
+}
+
+.ticket-stat-card {
+  padding: 1rem;
+  border-radius: 20px;
+  background: rgba(2, 6, 23, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.ticket-stat-card span,
+.movie-ticket-summary__label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: rgba(148, 163, 184, 0.82);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ticket-stat-card strong {
+  font-size: 1.3rem;
+  color: #ffffff;
+}
+
+.ticket-stat-card small {
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.movie-ticket-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.movie-ticket-summary {
+  display: grid;
+  gap: 1rem;
+}
+
+.movie-ticket-summary__card {
+  padding: 1.35rem;
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.movie-ticket-summary__card.is-highlight {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.18), rgba(37, 99, 235, 0.14));
+}
+
+.movie-ticket-summary__card h3 {
+  margin: 0.45rem 0 0.9rem;
+  color: #ffffff;
+}
+
+.movie-ticket-summary__list,
+.movie-ticket-summary__confidence {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.movie-ticket-summary__list div,
+.movie-ticket-summary__confidence div,
+.movie-ticket-summary__tip,
+.premium-inline-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.movie-ticket-summary__list span {
+  min-width: 105px;
+  color: rgba(148, 163, 184, 0.84);
+}
+
+.movie-ticket-summary__list strong {
+  color: #ffffff;
+}
+
+.movie-ticket-summary__refresh {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.premium-inline-alert {
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+}
+
+.premium-floating-status {
+  position: sticky;
+  bottom: 1rem;
+  margin-left: auto;
+  width: fit-content;
+  padding: 0.9rem 1.1rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(129, 140, 248, 0.28);
+  color: #ffffff;
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.26);
+}
+
+.premium-recovery-card__actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-top: 1.2rem;
+}
+
+@media (max-width: 980px) {
+  .movie-premium-hero,
+  .movie-ticket-hero,
+  .movie-ticket-main-grid,
+  .section-heading {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .movie-premium-hero__media,
+  .movie-ticket-hero__left {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .movie-ticket-hero__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .premium-page-shell,
+  .movie-page-shell,
+  .movie-details-page,
+  .movie-theatres-page,
+  .movie-tickets-page {
+    padding-inline: 0.9rem;
+  }
+
+  .movie-premium-hero,
+  .movie-ticket-hero,
+  .movie-section-card,
+  .premium-empty-state,
+  .premium-recovery-card {
+    padding: 1.2rem;
+    border-radius: 24px;
+  }
+
+  .movie-premium-hero__poster,
+  .movie-ticket-hero__poster,
+  .movie-poster,
+  .movie-details-poster {
+    width: 140px;
+    height: 210px;
+  }
+
+  .movie-premium-hero__meta,
+  .movie-ticket-hero__meta,
+  .section-heading__chip-group,
+  .premium-showtime-btn {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .movie-ticket-hero__stats {
+    grid-template-columns: 1fr;
+  }
+}

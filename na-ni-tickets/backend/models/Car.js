@@ -80,7 +80,7 @@ const carSchema = new mongoose.Schema(
     bookings: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'CarBooking',
+        ref: 'Booking',
       },
     ],
     createdAt: {

@@ -10,11 +10,11 @@ const bookingSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,  // Allow optional userId for test/guest bookings
     },
     bookingType: {
       type: String,
-      enum: ['Movie', 'Concert', 'Bus', 'Train', 'Flight', 'Car'],
+      enum: ['Movie', 'Event', 'Concert', 'Bus', 'Train', 'Flight', 'Car'],
       required: true,
     },
     itemId: {
@@ -28,8 +28,16 @@ const bookingSchema = new mongoose.Schema(
         age: Number,
         gender: String,
         phoneNumber: String,
+        identityNumber: String, // Aadhar
       },
     ],
+    rentalDetails: {
+      drivingLicenseUrl: String,
+      rentalStartTime: Date,
+      rentalEndTime: Date,
+      totalHours: Number,
+      dropLocation: String,
+    },
     seats: [String],
     selectedSeatsCount: {
       type: Number,
@@ -48,6 +56,10 @@ const bookingSchema = new mongoose.Schema(
     departureTime: String,
     departureLocation: String,
     arrivalLocation: String,
+    itemSnapshot: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
     status: {
       type: String,
       enum: ['Confirmed', 'Pending', 'Cancelled'],

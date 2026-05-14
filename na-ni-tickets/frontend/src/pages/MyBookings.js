@@ -157,7 +157,15 @@ const TicketPrinter = ({ booking }) => {
               <div class="row">
                 <div>
                   <div class="section-title">Seats/Tickets</div>
-                  <div class="section-content"><strong>${(booking.seats && booking.seats.join(', ')) || booking.selectedSeatsCount + ' ticket(s)'}</strong></div>
+                  <div class="section-content"><strong>{
+                    booking.bookingType === 'Train'
+                      ? [
+                          booking.seats && booking.seats.join(', '),
+                          'Coach: ' + (booking.coachNumber || 'A1'),
+                          'Route: ' + booking.source + ' → ' + booking.destination
+                        ].filter(Boolean).join(' | ')
+                      : (booking.seats && booking.seats.join(', ')) || (booking.selectedSeatsCount + ' ticket(s)')
+                  }</strong></div>
                 </div>
                 <div>
                   <div class="section-title">Total Amount</div>

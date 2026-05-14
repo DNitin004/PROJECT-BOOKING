@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL;
+// Default to the local CRA proxy (`/api`) when REACT_APP_API_URL is not set
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 // Create axios instance
 const api = axios.create({
@@ -46,14 +47,21 @@ export const authAPI = {
 // Items API
 export const itemsAPI = {
   getMovies: () => api.get('/items/movies'),
+  getMovieCities: () => api.get('/items/movies/cities'),
   getMovieDetails: (id) => api.get(`/items/movies/${id}`),
-  getConcerts: () => api.get('/items/concerts'),
-  getConcertDetails: (id) => api.get(`/items/concerts/${id}`),
+  getMovieTheatres: (id, params) => api.get(`/items/movies/${id}/theatres`, { params }),
+  getTheatresByCity: (params) => api.get('/items/theatres', { params }),
+  getConcerts: () => api.get('/items/events'),
+  getConcertDetails: (id) => api.get(`/items/events/${id}`),
   getBuses: (params) => api.get('/items/buses', { params }),
+  getBusLocations: () => api.get('/items/buses/locations'),
   getBusDetails: (id) => api.get(`/items/buses/${id}`),
   getTrains: (params) => api.get('/items/trains', { params }),
+  getTrainStations: () => api.get('/items/trains/stations'),
   getTrainDetails: (id) => api.get(`/items/trains/${id}`),
+  getTrainStops: (id) => api.get(`/items/trains/${id}/stops`),
   getFlights: (params) => api.get('/items/flights', { params }),
+  getFlightAirports: () => api.get('/items/flights/airports'),
   getFlightDetails: (id) => api.get(`/items/flights/${id}`),
   getCars: () => api.get('/items/cars'),
   getNearByCars: (params) => api.get('/items/cars/nearby', { params }),
@@ -71,6 +79,7 @@ export const bookingsAPI = {
   getUserBookings: () => api.get('/bookings'),
   getBookingDetails: (bookingId) => api.get(`/bookings/${bookingId}`),
   cancelBooking: (bookingId, data) => api.post(`/bookings/${bookingId}/cancel`, data),
+  getPassengerNames: () => api.get('/bookings/names/passengers'),
 };
 
 // Payments API

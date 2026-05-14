@@ -26,6 +26,15 @@ const flightSchema = new mongoose.Schema(
           code: String,
           airport: String,
         },
+        stops: [
+          {
+            name: String,
+            code: String,
+            airport: String,
+            arrivalTime: String,
+            departureTime: String
+          }
+        ],
         departureTime: String,
         arrivalTime: String,
         journeyDuration: String,
@@ -45,6 +54,11 @@ const flightSchema = new mongoose.Schema(
         price: Number,
         totalSeats: Number,
         availableSeats: Number,
+        layout: String,
+        rows: {
+          start: Number,
+          end: Number
+        }
       },
     ],
     amenities: [String],

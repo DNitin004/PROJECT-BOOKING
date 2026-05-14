@@ -36,6 +36,7 @@ const busSchema = new mongoose.Schema(
           name: String,
           city: String,
         },
+        stops: [String],
         departureTime: String,
         arrivalTime: String,
         journeyDuration: String,
@@ -55,6 +56,7 @@ const busSchema = new mongoose.Schema(
       },
     ],
     amenities: [String],
+    images: [String],
     rating: {
       type: Number,
       default: 0,

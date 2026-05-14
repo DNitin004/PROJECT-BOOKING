@@ -32,6 +32,14 @@ const movieSchema = new mongoose.Schema(
       {
         time: String,
         theater: String,
+        city: String,
+        state: String,
+        district: String,
+        theatreCode: String,
+        seatingCapacity: {
+          type: Number,
+          default: 0,
+        },
         price: {
           type: Number,
           required: true,
@@ -61,5 +69,10 @@ const movieSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+movieSchema.index({ title: 1 });
+movieSchema.index({ "shows.city": 1 });
+movieSchema.index({ "shows.theatreId": 1 });
+movieSchema.index({ isActive: 1 });
 
 module.exports = mongoose.model('Movie', movieSchema);

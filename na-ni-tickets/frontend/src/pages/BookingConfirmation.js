@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { bookingsAPI } from '../services/api';
 import './Booking.css';
 
@@ -8,31 +7,26 @@ function BookingConfirmation() {
   const loc = useLocation();
   const navigate = useNavigate();
   const [bookingId, setBookingId] = useState(null);
-  const [booking, setBooking] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (loc.state?.bookingId) {
       setBookingId(loc.state.bookingId);
-      // Fetch full booking details
+
+      const fetchBookingDetails = async (id) => {
+        try {
+          await bookingsAPI.getBookingDetails(id);
+          // Booking details fetched for future enhancements.
+        } catch (err) {
+          console.warn('Could not fetch full booking details', err.message);
+          // That's okay, we still have the booking ID
+        }
+      };
+
       fetchBookingDetails(loc.state.bookingId);
     } else {
       navigate('/');
     }
   }, [loc.state, navigate]);
-
-  const fetchBookingDetails = async (id) => {
-    try {
-      setLoading(true);
-      const res = await bookingsAPI.getBookingDetails(id);
-      setBooking(res.data.booking);
-    } catch (err) {
-      console.warn('Could not fetch full booking details', err.message);
-      // That's okay, we still have the booking ID
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handlePrintTicket = () => {
     if (!bookingId) return;

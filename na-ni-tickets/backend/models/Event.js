@@ -1,11 +1,16 @@
 const mongoose = require('mongoose');
 
-const concertSchema = new mongoose.Schema(
+const eventSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Please provide concert name'],
+      required: [true, 'Please provide event name'],
       trim: true,
+    },
+    eventType: {
+      type: String,
+      enum: ['Concert', 'Sports', 'Comedy', 'Other'],
+      default: 'Concert'
     },
     artists: [
       {
@@ -53,6 +58,10 @@ const concertSchema = new mongoose.Schema(
           type: Number,
           default: 0,
         },
+        bookedSeatIds: {
+          type: [String],
+          default: [],
+        },
         seatLayout: [String], // Array of seat IDs
       },
     ],
@@ -68,4 +77,6 @@ const concertSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('Concert', concertSchema);
+eventSchema.index({ isActive: 1 });
+
+module.exports = mongoose.model('Event', eventSchema);

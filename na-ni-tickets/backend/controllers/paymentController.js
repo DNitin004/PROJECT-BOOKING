@@ -81,7 +81,23 @@ exports.confirmPayment = async (req, res, next) => {
     }
 
     const txn = transactionId || generateTransactionId();
-    const pm = paymentMethod || (method === 'card' ? 'Credit Card' : method || 'Credit Card');
+    const rawMethod = String(paymentMethod || method || 'Credit Card').toLowerCase();
+    const methodMap = {
+      card: 'Credit Card',
+      credit: 'Credit Card',
+      creditcard: 'Credit Card',
+      debit: 'Debit Card',
+      debitcard: 'Debit Card',
+      upi: 'UPI',
+      wallet: 'Wallet',
+      pay: 'Wallet',
+      netbanking: 'Net Banking',
+      'net banking': 'Net Banking',
+      bank: 'Net Banking',
+      qa: 'UPI',
+      demo: 'UPI',
+    };
+    const pm = methodMap[rawMethod.replace(/\s|-/g, '')] || methodMap[rawMethod] || 'Credit Card';
 
     // Create payment record
     const payment = new Payment({
@@ -113,14 +129,20 @@ exports.confirmPayment = async (req, res, next) => {
       userName: `${user.firstName} ${user.lastName}`,
       bookingId: booking.bookingId,
       bookingType: booking.bookingType,
-      date: booking.journeyDate,
+      date: booking.journeyDate ? new Date(booking.journeyDate).toLocaleString('en-IN') : 'TBA',
       seats: (booking.seats || []).join(', '),
       totalAmount: booking.totalAmount,
       venue: booking.departureLocation,
+      posterUrl: booking.itemSnapshot?.posterUrl,
+      template: booking.itemSnapshot?.template,
     };
 
     if (typeof sendBookingConfirmation === 'function') {
-      await sendBookingConfirmation(user.email, bookingDetails);
+      try {
+        await sendBookingConfirmation(user.email, bookingDetails);
+      } catch (emailError) {
+        console.error('Payment confirmed, but ticket email failed:', emailError.message);
+      }
     }
 
     res.status(200).json({
@@ -131,6 +153,7 @@ exports.confirmPayment = async (req, res, next) => {
         amount: booking.totalAmount,
         bookingId: booking.bookingId,
       },
+      booking,
     });
   } catch (error) {
     next(error);

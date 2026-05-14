@@ -192,6 +192,17 @@
   color: var(--light-text);
   font-size: 18px;
 }
+
+/* Quick search and history styles */
+.quick-search-card { margin: 18px 0; background: white; padding: 14px; border-radius: 10px; box-shadow: var(--shadow); }
+.quick-search-row { display:flex; gap:8px; align-items:center; }
+.quick-input { flex:1; padding:10px 12px; border:1px solid #e6eef8; border-radius:8px; font-weight:600; }
+.icon-search { background:#0b84ff; color:white; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; }
+.history-list { margin-top:12px; }
+.history-list h4 { margin:0 0 8px 0; }
+.history-item { padding:10px 8px; border-bottom:1px solid #f1f5f9; cursor:pointer; }
+.history-item:hover { background:#fbfdff; }
+.history-empty { color:#546e7a; padding:8px; }
 .placeholder-text {
   position: absolute;
   top: 0;
@@ -228,6 +239,130 @@
 .coming-soon p {
   color: var(--light-text);
   font-size: 16px;
+}
+
+/* Professional UI polish shared by movies, events, buses, flights, cars, and trains */
+.items-page {
+  background:
+    linear-gradient(135deg, rgba(244, 63, 94, 0.08), transparent 24%),
+    linear-gradient(315deg, rgba(15, 118, 110, 0.1), transparent 30%),
+    var(--light-bg);
+}
+
+.page-header {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 34px;
+  padding: 58px 20px;
+  background:
+    linear-gradient(135deg, rgba(17, 24, 39, 0.94), rgba(15, 118, 110, 0.78)),
+    url('https://images.unsplash.com/photo-1530053969600-caed2596d242?auto=format&fit=crop&w=1800&q=80') center/cover;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: linear-gradient(to bottom, black, transparent);
+  animation: headerGrid 10s linear infinite;
+}
+
+.page-header h1,
+.page-header p {
+  position: relative;
+  z-index: 1;
+}
+
+.page-header h1 {
+  font-weight: 900;
+  animation: fadeLift 0.55s ease both;
+}
+
+.page-header p {
+  color: rgba(255, 255, 255, 0.82);
+  animation: fadeLift 0.65s ease both 0.08s;
+}
+
+.items-grid {
+  gap: 26px;
+}
+
+.item-card,
+.quick-search-card,
+.no-data,
+.coming-soon {
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow);
+  animation: fadeLift 0.5s ease both;
+}
+
+.item-card {
+  border-radius: 8px;
+}
+
+.item-card:hover {
+  transform: translateY(-10px) scale(1.01);
+  box-shadow: var(--shadow-lg);
+}
+
+.item-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.45), transparent 45%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.item-card:hover .item-image::after {
+  opacity: 1;
+}
+
+.overlay {
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(8px);
+}
+
+.btn-book,
+.icon-search {
+  background: linear-gradient(135deg, var(--primary-color), var(--gold-color));
+  border-radius: 8px;
+  box-shadow: 0 16px 32px rgba(244, 63, 94, 0.24);
+}
+
+.item-info h3 {
+  font-weight: 900;
+}
+
+.rating,
+.language,
+.show-time,
+.artists span,
+.history-item {
+  border-radius: 999px;
+}
+
+.show-time {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-weight: 800;
+}
+
+.placeholder-text {
+  background:
+    linear-gradient(135deg, rgba(244, 63, 94, 0.88), rgba(37, 99, 235, 0.82)),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.12) 25%, transparent 25%);
+}
+
+@keyframes headerGrid {
+  from { background-position: 0 0; }
+  to { background-position: 46px 46px; }
 }
 
 @media (max-width: 768px) {

@@ -1,6 +1,6 @@
 const Booking = require('../models/Booking');
 const Movie = require('../models/Movie');
-const Concert = require('../models/Concert');
+const Event = require('../models/Event');
 const Bus = require('../models/Bus');
 const Train = require('../models/Train');
 const Flight = require('../models/Flight');
@@ -11,7 +11,7 @@ const { sendBookingConfirmation, sendReminderEmail } = require('../utils/emailSe
 
 // Generate unique booking ID
 const generateBookingId = () => {
-  return 'BK' + Date.now() + Math.floor(Math.random() * 1000);
+  return 'BK' + Date.now() + Math.random().toString(36).substr(2, 9);
 };
 
 // @route POST /api/bookings/movie
@@ -84,7 +84,18 @@ exports.bookMovie = async (req, res, next) => {
       departureLocation: show.theater,
       status: 'Confirmed',
       paymentStatus: 'Pending',
-      travelerDetails,
+      travelerDetails: travelerDetails?.passengers && Array.isArray(travelerDetails.passengers) ? travelerDetails.passengers : (Array.isArray(travelerDetails) ? travelerDetails : (travelerDetails ? [travelerDetails] : [])),
+      itemSnapshot: {
+        title: movie.name,
+        subtitle: `${movie.language || 'Movie'}${movie.duration ? ` • ${movie.duration} min` : ''}`,
+        posterUrl: movie.posterUrl,
+        venue: show.theater,
+        city: show.city,
+        showTime: show.time,
+        theatreCode: show.theatreCode,
+        seatingCapacity: show.seatingCapacity || show.totalSeats,
+        template: 'movie',
+      },
     });
 
     await booking.save();
@@ -126,7 +137,7 @@ exports.bookConcert = async (req, res, next) => {
       });
     }
 
-    const concert = await Concert.findById(concertId);
+    const concert = await Event.findById(concertId);
     if (!concert) {
       return res.status(404).json({
         success: false,
@@ -150,8 +161,18 @@ exports.bookConcert = async (req, res, next) => {
       });
     }
 
+    const bookedSeatIds = ticketCategory.bookedSeatIds || [];
+    const unavailableSeats = seats.filter((seat) => bookedSeatIds.includes(seat));
+    if (unavailableSeats.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Seats ${unavailableSeats.join(', ')} are already booked`,
+      });
+    }
+
     // Update booking count
     ticketCategory.bookedSeats += seats.length;
+    ticketCategory.bookedSeatIds = [...bookedSeatIds, ...seats];
     const totalAmount = ticketCategory.price * seats.length;
 
     // Create booking
@@ -167,10 +188,20 @@ exports.bookConcert = async (req, res, next) => {
       totalAmount,
       bookingDate: new Date(),
       journeyDate: concert.date,
-      departureLocation: concert.venue.name,
+      departureLocation: concert.venue?.name,
       status: 'Confirmed',
       paymentStatus: 'Pending',
-      travelerDetails,
+      travelerDetails: travelerDetails?.passengers && Array.isArray(travelerDetails.passengers) ? travelerDetails.passengers : (Array.isArray(travelerDetails) ? travelerDetails : (travelerDetails ? [travelerDetails] : [])),
+      itemSnapshot: {
+        title: concert.name,
+        subtitle: concert.eventType || 'Event',
+        posterUrl: concert.posterUrl,
+        venue: concert.venue?.name,
+        city: concert.venue?.city,
+        category,
+        eventDate: concert.date,
+        template: 'event',
+      },
     });
 
     await booking.save();
@@ -189,7 +220,7 @@ exports.bookConcert = async (req, res, next) => {
         seats,
         concertName: concert.name,
         category,
-        venue: concert.venue.name,
+        venue: concert.venue?.name,
         date: concert.date,
       },
     });
@@ -202,7 +233,7 @@ exports.bookConcert = async (req, res, next) => {
 // @desc Create bus ticket booking
 exports.bookBus = async (req, res, next) => {
   try {
-    const { busId, routeId, seats, travelerDetails } = req.body;
+    const { busId, routeId, seats, travelerDetails, source, destination } = req.body;
     const userId = req.user.id;
 
     if (!busId || !routeId || !seats || seats.length === 0) {
@@ -248,6 +279,9 @@ exports.bookBus = async (req, res, next) => {
     route.bookedSeats = [...bookedSeats, ...seats];
     const totalAmount = route.fare * seats.length;
 
+    const departureLocation = source || route.source.name;
+    const arrivalLocation = destination || route.destination.name;
+
     const bookingId = generateBookingId();
     const booking = new Booking({
       bookingId,
@@ -261,11 +295,19 @@ exports.bookBus = async (req, res, next) => {
       bookingDate: new Date(),
       journeyDate: route.date,
       departureTime: route.departureTime,
-      departureLocation: route.source.name,
-      arrivalLocation: route.destination.name,
+      departureLocation,
+      arrivalLocation,
       status: 'Confirmed',
       paymentStatus: 'Pending',
-      travelerDetails,
+      travelerDetails: travelerDetails?.passengers && Array.isArray(travelerDetails.passengers) ? travelerDetails.passengers : (Array.isArray(travelerDetails) ? travelerDetails : (travelerDetails ? [travelerDetails] : [])),
+      itemSnapshot: {
+        title: bus.operatorName || bus.busName,
+        subtitle: `${bus.busName || 'Bus'} ${bus.busNumber ? `• ${bus.busNumber}` : ''}`,
+        posterUrl: bus.images?.[0] || 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1200&q=80',
+        busType: bus.busType,
+        route: `${departureLocation} → ${arrivalLocation}`,
+        template: 'bus',
+      },
     });
 
     await booking.save();
@@ -283,8 +325,8 @@ exports.bookBus = async (req, res, next) => {
         totalAmount,
         seats,
         busName: bus.busName,
-        from: route.source.name,
-        to: route.destination.name,
+        from: departureLocation,
+        to: arrivalLocation,
         departureTime: route.departureTime,
       },
     });
@@ -297,13 +339,14 @@ exports.bookBus = async (req, res, next) => {
 // @desc Create train ticket booking
 exports.bookTrain = async (req, res, next) => {
   try {
-    const { trainId, journeyDate, seats, travelerDetails } = req.body;
-    const userId = req.user.id;
+    const { trainId, journeyDate, seats, travelerDetails, source, destination, coachNumber } = req.body;
+    // allow unauthenticated bookings in development by falling back to null user
+    const userId = req.user?.id || null;
 
-    if (!trainId || !journeyDate || !seats || seats.length === 0) {
+    if (!trainId || !journeyDate || !seats || seats.length === 0 || !coachNumber) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide all required fields',
+        message: 'Please provide all required fields including coachNumber',
       });
     }
 
@@ -315,34 +358,39 @@ exports.bookTrain = async (req, res, next) => {
       });
     }
 
-    let journey = train.journeys.find(
-      (j) => new Date(j.date).toDateString() === new Date(journeyDate).toDateString()
-    );
+    const bookingId = generateBookingId();
 
-    if (!journey) {
-      journey = {
-        date: journeyDate,
-        totalAvailableSeats: train.coaches.reduce((sum, coach) => sum + coach.totalSeats, 0),
-        bookedSeats: [],
-      };
-      train.journeys.push(journey);
-    }
+    // Parse the updated train dataset rules
+    let departureLocation = source || train.stationFrom;
+    let arrivalLocation = destination || train.stationTo;
+    let routeFare = train.routeFare || 1000; 
 
-    const bookedSeats = journey.bookedSeats || [];
-    const unavailableSeats = seats.filter((seat) => bookedSeats.includes(seat));
-    
-    if (unavailableSeats.length > 0) {
+    // Find the chosen coach out of the train compositions
+    const coach = train.coaches && train.coaches.find(c => c.coachNumber === coachNumber);
+    if (!coach) {
       return res.status(400).json({
         success: false,
-        message: `Seats ${unavailableSeats.join(', ')} are already booked`,
+        message: 'Coach information not available',
       });
     }
 
-    journey.bookedSeats = [...bookedSeats, ...seats];
-    const avgFare = 1000; // Default fare, should be calculated properly
-    const totalAmount = avgFare * seats.length;
+    // Check seat availability
+    const bookedSeats = coach.bookedSeats || [];
+    const unavailableSeats = seats.filter((seat) => bookedSeats.includes(seat));
 
-    const bookingId = generateBookingId();
+    if (unavailableSeats.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Seats ${unavailableSeats.join(', ')} are already booked`,     
+      });
+    }
+
+    // Mark seats as booked
+    coach.bookedSeats = [...bookedSeats, ...seats];
+
+    const modifier = coach.priceModifier || 1.0;
+    const totalAmount = Math.round(routeFare * modifier * seats.length);
+
     const booking = new Booking({
       bookingId,
       userId,
@@ -350,37 +398,66 @@ exports.bookTrain = async (req, res, next) => {
       itemId: trainId,
       seats,
       selectedSeatsCount: seats.length,
-      pricePerSeat: avgFare,
+      pricePerSeat: routeFare,
       totalAmount,
       bookingDate: new Date(),
       journeyDate: new Date(journeyDate),
-      departureLocation: train.routes[0]?.source.name,
-      arrivalLocation: train.routes[train.routes.length - 1]?.destination.name,
+      departureLocation,
+      arrivalLocation,
       status: 'Confirmed',
       paymentStatus: 'Pending',
-      travelerDetails,
+      travelerDetails: travelerDetails?.passengers && Array.isArray(travelerDetails.passengers) ? travelerDetails.passengers : (travelerDetails ? [travelerDetails] : []),
+      itemSnapshot: {
+        title: train.trainName,
+        subtitle: `Train #${train.trainNumber}`,
+        posterUrl: 'https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1200&q=80',
+        coachNumber,
+        coachType: coach.coachType,
+        route: `${departureLocation} → ${arrivalLocation}`,
+        departureTime: train.departureTime,
+        arrivalTime: train.arrivalTime,
+        template: 'train',
+      },
     });
 
     await booking.save();
     await train.save();
 
-    const user = await User.findById(userId);
-    user.bookings.push(booking._id);
-    await user.save();
+    // attach booking to user if authenticated
+    if (userId) {
+      const user = await User.findById(userId);
+      if (user) {
+        user.bookings.push(booking._id);
+        await user.save();
+      }
+    }
 
     res.status(201).json({
       success: true,
-      message: 'Train booking successful!',
+      message: 'Train booking created successfully!',
       booking: {
         bookingId,
+        _id: booking._id,
         totalAmount,
         seats,
+        pricePerSeat: routeFare,
         trainNumber: train.trainNumber,
         trainName: train.trainName,
+        departureLocation: departureLocation,
+        arrivalLocation: arrivalLocation,
+        source: source || train.stationFrom,
+        destination: destination || train.stationTo,
+        departureTime: train.departureTime || 'N/A',
+        arrivalTime: train.arrivalTime || 'N/A',
+        duration: train.duration || 'N/A',
+        distance: train.distance || 'N/A',
         journeyDate,
+        coachNumber: coach?.coachNumber || 'A1',
+        travelerDetails: travelerDetails?.passengers && Array.isArray(travelerDetails.passengers) ? travelerDetails.passengers : (travelerDetails ? [travelerDetails] : []),
       },
     });
   } catch (error) {
+    console.error("TRAIN BOOKING ERROR: ", error);
     next(error);
   }
 };
@@ -389,10 +466,10 @@ exports.bookTrain = async (req, res, next) => {
 // @desc Create flight booking
 exports.bookFlight = async (req, res, next) => {
   try {
-    const { flightId, routeId, classType, seats, travelerDetails } = req.body;
+    const { flightId, routeId, classType, seats, travelerDetails, boardingPoint, dropPoint } = req.body;
     const userId = req.user.id;
 
-    if (!flightId || !routeId || !classType || !seats || seats.length === 0) {
+    if (!flightId || !classType || !seats || seats.length === 0) {
       return res.status(400).json({
         success: false,
         message: 'Please provide all required fields',
@@ -407,7 +484,9 @@ exports.bookFlight = async (req, res, next) => {
       });
     }
 
-    const route = flight.routes.find((r) => r._id.toString() === routeId);
+    const route = routeId
+      ? flight.routes.find((r) => r._id?.toString() === routeId?.toString())
+      : flight.routes?.[0];
     if (!route) {
       return res.status(404).json({
         success: false,
@@ -457,11 +536,21 @@ exports.bookFlight = async (req, res, next) => {
       bookingDate: new Date(),
       journeyDate: route.date,
       departureTime: route.departureTime,
-      departureLocation: route.source.name,
-      arrivalLocation: route.destination.name,
+      departureLocation: boardingPoint || route.source.name,
+      arrivalLocation: dropPoint || route.destination.name,
       status: 'Confirmed',
       paymentStatus: 'Pending',
-      travelerDetails,
+      travelerDetails: travelerDetails?.passengers && Array.isArray(travelerDetails.passengers) ? travelerDetails.passengers : (Array.isArray(travelerDetails) ? travelerDetails : (travelerDetails ? [travelerDetails] : [])),
+      itemSnapshot: {
+        title: flight.airline?.name || 'Flight',
+        subtitle: `${flight.flightNumber} • ${flight.aircraftType || classType}`,
+        posterUrl: flight.airline?.logoUrl || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1200&q=80',
+        classType,
+        route: `${route.source?.code || route.source?.name} → ${route.destination?.code || route.destination?.name}`,
+        departureTime: route.departureTime,
+        arrivalTime: route.arrivalTime,
+        template: 'flight',
+      },
     });
 
     await booking.save();
@@ -539,6 +628,17 @@ exports.bookCar = async (req, res, next) => {
       arrivalLocation: dropLocation,
       status: 'Confirmed',
       paymentStatus: 'Pending',
+      itemSnapshot: {
+        title: car.carModel,
+        subtitle: `${car.manufacturer || 'Car'} • ${car.carType}`,
+        posterUrl: car.images?.[0] || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80',
+        registrationNumber: car.registrationNumber,
+        seatingCapacity: car.seatingCapacity,
+        fuelType: car.fuelType,
+        transmissionType: car.transmissionType,
+        color: car.color,
+        template: 'car',
+      },
     });
 
     await booking.save();
@@ -606,6 +706,43 @@ exports.getBookingDetails = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+// @route GET /api/bookings/names/passengers
+// @desc Get passenger names from user's bookings
+exports.getPassengerNames = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    
+    // Get user's own name
+    const user = await User.findById(userId).select('firstName lastName');
+    const userNames = new Set();
+    if (user) {
+      userNames.add(`${user.firstName} ${user.lastName}`);
+    }
+    
+    // Get all unique traveler names from user's bookings
+    const bookings = await Booking.find({ userId }).select('travelerDetails');
+    bookings.forEach(booking => {
+      if (booking.travelerDetails && Array.isArray(booking.travelerDetails)) {
+        booking.travelerDetails.forEach(traveler => {
+          if (traveler.name) {
+            userNames.add(traveler.name);
+          }
+        });
+      }
+    });
+    
+    return res.status(200).json({
+      success: true,
+      passengerNames: Array.from(userNames).sort()
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch passenger names'
+    });
   }
 };
 

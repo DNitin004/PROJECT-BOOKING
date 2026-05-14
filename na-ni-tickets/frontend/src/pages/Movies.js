@@ -1,117 +1,195 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaMapMarkerAlt, FaSearch } from 'react-icons/fa';
 import { itemsAPI } from '../services/api';
-import { toast } from 'react-toastify';
-import api from '../services/api';
-import './Items.css';
-import { FaFilm, FaClock, FaStar } from 'react-icons/fa';
+import { applyImageFallback, getImage } from '../utils/imageFallbacks';
+import './Movies.css';
 
 function Movies() {
   const navigate = useNavigate();
   const [movies, setMovies] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSeeding, setIsSeeding] = useState(false);
+  const [availableCities, setAvailableCities] = useState([]);
+  const [selectedCity, setSelectedCity] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('All');
+  const [showCityPicker, setShowCityPicker] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchMovies();
+    const savedCity = localStorage.getItem('preferredCity');
+    if (savedCity) {
+      setSelectedCity(savedCity);
+    } else {
+      setShowCityPicker(true);
+    }
   }, []);
 
-  const fetchMovies = async () => {
-    try {
-      setIsLoading(true);
-      const response = await itemsAPI.getMovies();
-      setMovies(response.data.movies || []);
-    } catch (error) {
-      toast.error('Failed to fetch movies');
-      setMovies([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [moviesRes, citiesRes] = await Promise.all([
+          itemsAPI.getMovies(),
+          itemsAPI.getMovieCities(),
+        ]);
 
-  const handleSeedDatabase = async () => {
-    try {
-      setIsSeeding(true);
-      const response = await api.post('/items/seed-all');
-      toast.success(`Database seeded! Added ${response.data.data.moviesAdded} movies, ${response.data.data.concertsAdded} concerts, and more!`);
-      fetchMovies();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to seed database');
-    } finally {
-      setIsSeeding(false);
-    }
+        const fetchedMovies = moviesRes.data?.movies || [];
+        setMovies(fetchedMovies);
+
+        const fetchedCities = citiesRes.data?.cities || [];
+        if (fetchedCities.length > 0) {
+          setAvailableCities(fetchedCities);
+        } else {
+          const citySet = new Set();
+          fetchedMovies.forEach((movie) => {
+            (movie.shows || []).forEach((show) => {
+              if (show.city) citySet.add(show.city);
+            });
+          });
+          setAvailableCities(Array.from(citySet).sort((a, b) => a.localeCompare(b)));
+        }
+      } catch (error) {
+        setMovies([]);
+        setAvailableCities([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, []);
+
+  const filteredCities = useMemo(() => {
+    return availableCities.filter((city) => city.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [availableCities, searchQuery]);
+
+  const moviesInCity = useMemo(() => {
+    if (!selectedCity) return [];
+    return movies.filter((movie) =>
+      (movie.shows || []).some(
+        (show) => (show.city || '').toLowerCase() === selectedCity.toLowerCase()
+      )
+    );
+  }, [movies, selectedCity]);
+
+  const languageOptions = useMemo(() => {
+    const langs = new Set();
+    moviesInCity.forEach((movie) => {
+      if (movie.language) langs.add(movie.language);
+    });
+    return ['All', ...Array.from(langs)];
+  }, [moviesInCity]);
+
+  const filteredMovies = useMemo(() => {
+    if (selectedLanguage === 'All') return moviesInCity;
+    return moviesInCity.filter((movie) => (movie.language || '') === selectedLanguage);
+  }, [moviesInCity, selectedLanguage]);
+
+  const handleCitySelect = (city) => {
+    setSelectedCity(city);
+    localStorage.setItem('preferredCity', city);
+    setSearchQuery('');
+    setShowCityPicker(false);
   };
 
   return (
-    <div className="items-page">
-      <div className="page-header">
-        <h1><FaFilm /> Movie Tickets</h1>
-        <p>Select your movie and show timing, then book in mini theatre view</p>
+    <div className="movies-screen">
+      <div className="movies-top-search">
+        <FaSearch />
+        <span>Search for a movie</span>
       </div>
 
-      <div className="container">
-        {movies.length === 0 && !isLoading && (
-          <div style={{ marginBottom: 16 }}>
-            <button 
-              className="btn-primary" 
-              onClick={handleSeedDatabase}
-              disabled={isSeeding}
-              style={{ padding: '10px 20px', fontSize: '16px' }}
-            >
-              {isSeeding ? 'Seeding...' : '📥 Seed Database with Sample Data'}
-            </button>
-          </div>
-        )}
+      <div className="movies-city-row">
+        <h1 className="movies-title">Only in Theatres</h1>
+        <button className="movies-city-btn" onClick={() => setShowCityPicker(true)}>
+          <FaMapMarkerAlt style={{ marginRight: 6 }} />
+          {selectedCity || 'Select city'}
+        </button>
+      </div>
 
-        {isLoading ? (
-          <div className="loading">
-            <div className="spinner"></div>
-            <p>Loading movies...</p>
-          </div>
-        ) : movies.length > 0 ? (
-          <div className="items-grid">
-            {movies.map((movie) => (
-              <div key={movie._id} className="item-card movie-card">
-                <div className="item-image" style={{ backgroundColor: '#e0e0e0', backgroundImage: `url(${movie.posterUrl || 'about:blank'})` }}>
-                  <img src={movie.posterUrl} alt={movie.name} style={movie.posterUrl ? {} : { display: 'none' }} />
-                  {!movie.posterUrl && <div className="placeholder-text">{movie.name}</div>}
-                  <div className="overlay">
-                    <button className="btn-book" onClick={() => navigate(`/movies/${movie._id}`)}>View Shows</button>
-                  </div>
-                </div>
-                <div className="item-info">
-                  <h3>{movie.name}</h3>
-                  <div className="movie-meta">
-                    <span className="rating">
-                      <FaStar /> {movie.rating || 'NA'}
-                    </span>
-                    <span className="language">{movie.language}</span>
-                  </div>
-                  <div className="shows">
-                    {movie.shows && movie.shows.slice(0, 4).map((show) => (
-                      <button key={show._id || show.time} className="show-time" onClick={() => navigate(`/movies/${movie._id}`)}>
-                        <FaClock /> {show.time}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+      <div className="movies-chip-row">
+        {languageOptions.map((lang) => (
+          <button
+            key={lang}
+            className="movies-chip"
+            style={selectedLanguage === lang ? { borderColor: '#ffffff' } : undefined}
+            onClick={() => setSelectedLanguage(lang)}
+          >
+            {lang}
+          </button>
+        ))}
+      </div>
+
+      {loading && <div className="movies-empty">Loading movies...</div>}
+
+      {!loading && filteredMovies.length === 0 && (
+        <div className="movies-empty">
+          No movies are available for this city right now.
+        </div>
+      )}
+
+      {!loading && filteredMovies.length > 0 && (
+        <div className="movies-grid">
+          {filteredMovies.map((movie) => (
+            <div
+              className="movie-card"
+              key={movie._id}
+              onClick={() => navigate(`/movies/${movie._id}`, { state: { selectedCity } })}
+            >
+              <img
+                className="movie-poster"
+                src={getImage(movie.posterUrl, 'moviePoster')}
+                alt={movie.name}
+                onError={(event) => applyImageFallback(event, 'moviePoster')}
+              />
+              <div className="movie-meta">
+                <h3 className="movie-name">{movie.name}</h3>
+                <div className="movie-sub">UA13+ | {movie.language}</div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="no-data">
-            <p>No movies available at the moment</p>
-            <button 
-              className="btn-primary"
-              onClick={handleSeedDatabase}
-              disabled={isSeeding}
-              style={{ marginTop: '16px', padding: '10px 20px', fontSize: '16px' }}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showCityPicker && (
+        <div className="city-overlay">
+          <div className="city-sheet">
+            <h2>Location</h2>
+            <input
+              className="city-search"
+              placeholder="Search city, area or locality"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+
+            <div className="city-list">
+              {filteredCities.map((city) => (
+                <div key={city} className="city-row" onClick={() => handleCitySelect(city)}>
+                  <div>
+                    <div className="city-name">{city}</div>
+                    <div className="city-state">Tap to browse theatres and movies</div>
+                  </div>
+                  <div>{'>'}</div>
+                </div>
+              ))}
+
+              {filteredCities.length === 0 && (
+                <div className="city-row">
+                  <div>No city found</div>
+                </div>
+              )}
+            </div>
+
+            <button
+              className="movies-city-btn"
+              style={{ marginTop: 14 }}
+              onClick={() => setShowCityPicker(false)}
             >
-              {isSeeding ? 'Seeding...' : '📥 Load Sample Data'}
+              Close
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
