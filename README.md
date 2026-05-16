@@ -234,6 +234,22 @@ Open your browser and navigate to:
 http://localhost:3000
 ```
  
+### Deploying to Render (Free Tier)
+
+1. Create an account on https://render.com
+2. Connect your GitHub repository
+3. Add a new service and select `render.yaml` from the root of this repository
+4. Add these environment variables in Render:
+   - `MONGODB_URI`
+   - `JWT_SECRET`
+   - `SMTP_USER`
+   - `SMTP_PASS`
+   - `SENDER_EMAIL`
+   - `FRONTEND_URL`
+   - `REACT_APP_API_URL`
+   - `REACT_APP_STRIPE_PUBLIC_KEY`
+5. Deploy the backend and frontend services.
+
 ### Run in Terminal (PowerShell)
 
 If you prefer PowerShell, open two separate PowerShell windows (one for backend, one for frontend) and run the following commands.

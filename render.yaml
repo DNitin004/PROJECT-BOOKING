@@ -1,0 +1,16 @@
+services:
+  - name: nani-tickets-backend
+    type: web
+    env: docker
+    branch: main
+    dockerfilePath: na-ni-tickets/backend/Dockerfile
+    buildCommand: npm install
+    startCommand: npm start
+
+  - name: nani-tickets-frontend
+    type: web
+    env: docker
+    branch: main
+    dockerfilePath: na-ni-tickets/frontend/Dockerfile
+    buildCommand: npm install
+    startCommand: serve -s build -l 3000

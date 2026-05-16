@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy package.json and install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm install --production
 
 # Copy application code
 COPY . .
@@ -14,5 +14,8 @@ COPY . .
 # Expose port
 EXPOSE 5000
 
+# Production environment
+ENV NODE_ENV=production
+
 # Start application
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]
